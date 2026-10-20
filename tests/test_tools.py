@@ -1,3 +1,4 @@
+import csv
 import tempfile
 import unittest
 from pathlib import Path
@@ -34,7 +35,42 @@ class Tabulate(unittest.TestCase):
     def test_out_of_range_rejected(self):
         with self.assertRaises(ValueError):
             tab.tabulate([row("A", "j1", 11, 7, 7, 7, 7)], CFG)
+    
+    def test_csv_output_can_be_read_back(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            scores_path = tmp / "scores.csv"
+            output_path = tmp / "results.csv"
 
+            with scores_path.open("w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(
+                    f,
+                    fieldnames=[
+                        "team", "judge", "accuracy", "issue_spotting",
+                        "usefulness", "judgment", "presentation", "penalty",
+                    ],
+                )
+                writer.writeheader()
+                writer.writerow(row("Team A", "judge1", 10, 10, 10, 10, 10))
+                writer.writerow(row("Team B", "judge1", 5, 5, 5, 5, 5))
+
+            self.assertEqual(
+                tab.main([
+                    str(ROOT / "2027" / "rubrics" / "build-weights.toml"),
+                    str(scores_path),
+                    "--out",
+                    str(output_path),
+                ]),
+                0,
+            )
+
+            with output_path.open(newline="", encoding="utf-8") as f:
+                results = list(csv.DictReader(f))
+
+            self.assertEqual([r["team"] for r in results], ["Team A", "Team B"])
+            self.assertEqual([r["rank"] for r in results], ["1", "2"])
+            self.assertEqual(float(results[0]["score"]), 100.0)
+            self.assertIn("avg_accuracy", results[0])
 
 GOOD_README = "# Team Torch\n\n## Lane\nA\n\n## What it does\nx\n\n## How to use it\nx\n\n## Where this fails\nx\n"
 
