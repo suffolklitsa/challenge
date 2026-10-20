@@ -16,6 +16,7 @@ python3 tools/tabulate.py 2027/rubrics/build-weights.toml scores.csv
 
 ## Rules for this repo
 
+- **Branches:** work from `staging` and open pull requests against it. Never target `main`; maintainers promote `staging` to `main`.
 - **Nothing from the private case file.** No case facts, answer-key content or hidden tests here. Released materials arrive only through the private repo's release script.
 - **Rules and rubrics must match the tools.** If you change scoring or submission requirements, change the tool, its tests and the docs in one pull request.
 - **Write for a first-year.** Plain words, short sections; lanes A and C stay doable without code.

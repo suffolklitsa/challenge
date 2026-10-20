@@ -36,6 +36,10 @@ Details, dates and lanes: [2027/README.md](2027/README.md).
 
 Open an issue labeled `question`, or email sam.darkwa@su.suffolk.edu. Please don't ask organizers or judges about the case itself outside official channels; answers go to everyone through this repo.
 
+## Branches
+
+Pull requests go to `staging`, the default branch. `main` is the released version: maintainers promote `staging` to `main` with a pull request when a batch of changes is ready. Both branches are protected and need a review and passing checks.
+
 ## Contributing
 
 This repo is for organizers and for tools anyone can check. Competitors are welcome to report problems with the tools or unclear rules as issues. See [CONTRIBUTING.md](CONTRIBUTING.md).
