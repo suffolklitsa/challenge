@@ -1,0 +1,5 @@
+team,judge,accuracy,issue_spotting,usefulness,judgment,presentation,penalty
+Team Alpha,Judge 1,9,8,8,9,8,
+Team Alpha,Judge 2,8,9,8,8,9,0
+Team Beta,Judge 1,7,8,9,7,8,
+Team Beta,Judge 2,8,7,8,8,8,2

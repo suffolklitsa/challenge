@@ -1,3 +1,4 @@
+import csv
 import tempfile
 import unittest
 from pathlib import Path
@@ -34,6 +35,36 @@ class Tabulate(unittest.TestCase):
     def test_out_of_range_rejected(self):
         with self.assertRaises(ValueError):
             tab.tabulate([row("A", "j1", 11, 7, 7, 7, 7)], CFG)
+    def test_example_scores_csv(self):
+        example_path = ROOT / "templates" / "example-scores.csv"
+
+        with example_path.open(newline="", encoding="utf-8") as file:
+            rows = list(csv.DictReader(file))
+
+        self.assertEqual(
+            list(rows[0]),
+            [
+                "team",
+                "judge",
+                "accuracy",
+                "issue_spotting",
+                "usefulness",
+                "judgment",
+                "presentation",
+                "penalty",
+            ],
+        )
+
+        results = tab.tabulate(rows, CFG)
+
+        self.assertEqual(len(results), 2)
+        self.assertEqual(
+            [(r["rank"], r["team"], r["score"], r["judges"]) for r in results],
+            [
+                (1, "Team Alpha", 84.0, 2),
+                (2, "Team Beta", 76.5, 2),
+            ],
+        )
 
 
 GOOD_README = "# Team Torch\n\n## Lane\nA\n\n## What it does\nx\n\n## How to use it\nx\n\n## Where this fails\nx\n"
