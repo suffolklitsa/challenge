@@ -1,0 +1,12 @@
+# Build challenge scoring weights (draft; final with the rules). Weights must add to 100.
+judges_per_team = 2
+
+# Ties break on these categories in order.
+tie_breaks = ["accuracy", "issue_spotting", "judgment"]
+
+[weights]
+accuracy = 35          # correct law and facts from the case file; an invented citation is a heavy penalty
+issue_spotting = 20
+usefulness = 20        # would the person in your lane's role actually use it?
+judgment = 15          # risks, limits, when to hand off to a human
+presentation = 10
