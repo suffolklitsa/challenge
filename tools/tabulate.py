@@ -66,12 +66,29 @@ def tabulate(rows: list[dict], cfg: dict) -> list[dict]:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) != 2:
+    if len(argv) not in (2, 4):
         print(__doc__)
         return 2
+
+    out_path = None
+    if len(argv) == 4:
+        if argv[2] != "--out":
+            print(__doc__)
+            return 2
+        out_path = Path(argv[3])
+
     cfg = load_weights(Path(argv[0]))
     with open(argv[1], newline="", encoding="utf-8") as f:
         results = tabulate(list(csv.DictReader(f)), cfg)
+
+    if out_path is not None:
+        fieldnames = ["rank", "team", "score", "judges"]
+        fieldnames += [f"avg_{cat}" for cat in cfg["weights"]]
+        with out_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(results)
+
     print(f"{'rank':>4}  {'score':>6}  {'judges':>6}  team")
     for r in results:
         print(f"{r['rank']:>4}  {r['score']:>6.2f}  {r['judges']:>6}  {r['team']}")
