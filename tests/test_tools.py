@@ -96,6 +96,30 @@ class Submission(unittest.TestCase):
         p = cs.problems(self.folder({"README.md": GOOD_README, "AI-USE.md": "## Tools\nNone\n", "app.py": "KEY = 'sk-" + "a" * 30 + "'"}))
         self.assertTrue(any("secret" in x for x in p))
 
+    def secret_files(self, files):
+        p = cs.problems(self.folder({"README.md": GOOD_README, "AI-USE.md": "## Tools\nNone\n", **files}))
+        return sorted(x.split(" ")[0] for x in p if "secret" in x)
+
+    def test_private_key_files_are_scanned(self):
+        key = "-----BEGIN " + "RSA PRIVATE KEY-----\nabc\n"
+        self.assertEqual(self.secret_files({"key.pem": key, "server.key": key}), ["key.pem", "server.key"])
+
+    def test_config_shell_react_and_extensionless_files_are_scanned(self):
+        line = "KEY=sk-" + "a" * 30 + "\n"
+        files = {"config.ini": line, "run.sh": line, "App.jsx": line, "notes": line}
+        self.assertEqual(self.secret_files(files), ["App.jsx", "config.ini", "notes", "run.sh"])
+
+    def test_images_pdfs_and_word_files_are_not_scanned(self):
+        line = "KEY=sk-" + "a" * 30 + "\n"
+        self.assertEqual(self.secret_files({"photo.png": line, "brief.pdf": line, "memo.docx": line}), [])
+
+    def test_files_over_25_mb_are_not_scanned(self):
+        d = self.folder({"README.md": GOOD_README, "AI-USE.md": "## Tools\nNone\n"})
+        with (d / "big.txt").open("w") as f:
+            f.write("KEY=sk-" + "a" * 30 + "\n")
+            f.truncate(cs.MAX_BYTES + 1)
+        self.assertEqual(cs.problems(d), ["big.txt is over 25 MB"])
+
 
 if __name__ == "__main__":
     unittest.main()
