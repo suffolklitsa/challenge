@@ -1,4 +1,6 @@
+import contextlib
 import csv
+import io
 import tempfile
 import unittest
 from pathlib import Path
@@ -35,6 +37,34 @@ class Tabulate(unittest.TestCase):
     def test_out_of_range_rejected(self):
         with self.assertRaises(ValueError):
             tab.tabulate([row("A", "j1", 11, 7, 7, 7, 7)], CFG)
+
+    def test_duplicate_judge_row_rejected(self):
+        rows = [row("Team A", "judge1", 7, 7, 7, 7, 7), row("Team A", "judge1", 8, 8, 8, 8, 8)]
+        with self.assertRaisesRegex(ValueError, "Team A / judge1: this judge has two rows"):
+            tab.tabulate(rows, CFG)
+
+    def test_negative_penalty_rejected(self):
+        with self.assertRaisesRegex(ValueError, "Team A / judge1: penalty can't be negative"):
+            tab.tabulate([row("Team A", "judge1", 7, 7, 7, 7, 7, "-5")], CFG)
+
+    def test_blank_score_names_team_judge_and_column(self):
+        with self.assertRaisesRegex(ValueError, "^Team A / judge1: accuracy is blank$"):
+            tab.tabulate([row("Team A", "judge1", "", 7, 7, 7, 7)], CFG)
+
+    def test_non_numeric_score_names_team_judge_and_column(self):
+        with self.assertRaisesRegex(ValueError, "Team A / judge1: usefulness is not a number: 'seven'"):
+            tab.tabulate([row("Team A", "judge1", 7, 7, "seven", 7, 7)], CFG)
+
+    def test_missing_column_is_named_before_rows_are_read(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            scores_path = Path(tmp) / "scores.csv"
+            # The row's blank accuracy would fail too, but the missing column is reported first.
+            scores_path.write_text("team,judge,accuracy,issue_spotting,usefulness,judgment,penalty\nTeam A,judge1,,7,7,7,\n", encoding="utf-8")
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err), contextlib.redirect_stdout(io.StringIO()):
+                code = tab.main([str(ROOT / "2027" / "rubrics" / "build-weights.toml"), str(scores_path)])
+        self.assertEqual(code, 1)
+        self.assertEqual(err.getvalue(), "error: the scores CSV is missing the column(s): presentation\n")
     
     def test_csv_output_can_be_read_back(self):
         with tempfile.TemporaryDirectory() as tmp:
